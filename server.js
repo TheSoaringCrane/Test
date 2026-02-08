@@ -25,3 +25,15 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
+
+const path = require('path');
+
+app.get('/admin/logs', (req, res) => {
+  const key = req.query.key;
+
+  if (key !== 'mySecret123') {
+    return res.status(403).send('Forbidden');
+  }
+
+  res.sendFile(path.join(__dirname, 'ip_logs.txt'));
+});
