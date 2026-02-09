@@ -1,7 +1,9 @@
 const express = require('express');
 const fs = require('fs');
-const app = express();
 const path = require('path');
+const UAParser = require('ua-parser-js');
+
+const app = express();
 const PORT = process.env.PORT || 3000;
 
 app.get('/', (req, res) => {
@@ -9,33 +11,54 @@ app.get('/', (req, res) => {
     req.headers['x-forwarded-for']?.split(',')[0] ||
     req.socket.remoteAddress;
 
-  const logLine = `${new Date().toISOString()} - ${ip}\n - ${req.headers['user-agent']}\n`;
+  const uaString = req.headers['user-agent'] || '';
+  const parser = new UAParser(uaString);
+
+  const deviceType = parser.getDevice().type || 'desktop';
+  const browser = parser.getBrowser().name || 'UnknownBrowser';
+  const os = parser.getOS().name || 'UnknownOS';
+
+  const logLine =
+    `${new Date().toISOString()} | ` +
+    `IP: ${ip} | ` +
+    `Device: ${deviceType} | ` +
+    `Browser: ${browser} | ` +
+    `OS: ${os}\n`;
 
   fs.appendFile('ip_logs.txt', logLine, (err) => {
-    if (err) console.error('Failed to log IP:', err);
+    if (err) console.error('Failed to write log:', err);
   });
 
+  console.log('[VISIT]', logLine.trim());
+
   res.send(`
-    <h1>Welcome</h1>
-    <p>Thanks for the IP</p>
-    <p>You can close now, Cuz I already logged it <3</b></p>
+    <h1>Welcum!</h1>
+    <p>for learning purposes. (probably).</p>
+    <p>Yummy IP.</p>
   `);
 });
 
-const PORT = process.env.PORT || 3000;
+// Admin route
+app.get('/admin/logs', (req, res) => {
+  const key = req.query.key;
+  const SECRET_KEY = 'YummyCum';
+
+  if (key !== SECRET_KEY) {
+    return res.status(403).send('Forbidden');
+  }
+
+  const filePath = path.join(__dirname, 'ip_logs.txt');
+  if (!fs.existsSync(filePath)) return res.status(404).send('No logs yet.');
+
+  res.sendFile(filePath);
+});
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
 
-const path = require('path');
+// YEY, ME HAVE MORE IP TO EAT NOW >:)
 
-app.get('/admin/logs', (req, res) => {
-  const key = req.query.key;
 
-  if (key !== '') {
-    return res.status(403).send('Forbidden');
-  }
-
-  res.sendFile(path.join(__dirname, 'ip_logs.txt'));
-});
+//Dairy of the Unfortunated.
+//2026-02-09 My Web service failed :(
