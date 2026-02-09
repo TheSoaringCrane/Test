@@ -1,20 +1,22 @@
 const express = require('express');
 const fs = require('fs');
 const app = express();
+const path = require('path');
+const PORT = process.env.PORT || 3000;
 
 app.get('/', (req, res) => {
   const ip =
     req.headers['x-forwarded-for']?.split(',')[0] ||
     req.socket.remoteAddress;
 
-  const logLine = `${new Date().toISOString()} - ${ip}\n`;
+  const logLine = `${new Date().toISOString()} - ${ip}\n - ${req.headers['user-agent']}\n`;
 
   fs.appendFile('ip_logs.txt', logLine, (err) => {
     if (err) console.error('Failed to log IP:', err);
   });
 
   res.send(`
-    <h1>Welcome 👋</h1>
+    <h1>Welcome</h1>
     <p>Thanks for the IP</p>
     <p>You can close now, Cuz I already logged it <3</b></p>
   `);
@@ -31,7 +33,7 @@ const path = require('path');
 app.get('/admin/logs', (req, res) => {
   const key = req.query.key;
 
-  if (key !== 'mySecret123') {
+  if (key !== '') {
     return res.status(403).send('Forbidden');
   }
 
